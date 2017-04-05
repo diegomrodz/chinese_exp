@@ -1,16 +1,10 @@
-from neo4j.v1 import GraphDatabase, basic_auth
 import scrapy
 import re
 import nltk
+import repository
 
 # The base url for searching a char in the Purple Culture Dictionary
 PURPLE_URL = "https://www.purpleculture.net/dictionary-details/?word={}"
-
-# The Authentication for acessing the Neo4j Database
-BASIC_AUTH = basic_auth("neo4j", "cogch")
-
-# Initialises the Driver
-driver = GraphDatabase.driver("bolt://localhost:7687", auth=BASIC_AUTH)
 
 TOTAL_STROKES = "Total strokes:"
 RADICAL = "Radical:"
@@ -20,8 +14,8 @@ class VocabCrawler(scrapy.Spider):
     """ Implementing the Crawler starting on the word 爱 (love).
     """
     name = 'vocab_crawler'
-    start_urls = [PURPLE_URL.format("爱")] # Lets start with love!
-
+    start_urls = [PURPLE_URL.format("好")] # Lets start with love!
+    
     def parse(self, response):
         self.set_response(response)
 
@@ -40,18 +34,33 @@ class VocabCrawler(scrapy.Spider):
     
     def process_char(self, char):
         pinyin = self.get_pinyin()[0]
+
         definitions = self.get_definitions()
+
+        for definition in definitions:
+            repository.touch_definition(definition)
+            repository.means(char, definition)
+
         composition = self.get_composition()
 
         if TOTAL_STROKES in composition:
             idx = composition.index(TOTAL_STROKES)
             total_strokes = composition[idx + 1][1:-2]
+            
             print("Total Strokes:", total_strokes)
+
+            repository.touch_char(char, pinyin=pinyin, strokes=total_strokes)
+        else:
+            repository.touch_char(char, pinyin=pinyin)
         
         if RADICAL in composition:
             idx = composition.index(RADICAL)
             radical = composition[idx + 2]
+            
             print("Radical", radical)
+
+            repository.touch_char(radical, is_radical=True)
+            repository.has_radical(char, radical)
 
         if STRUCTURE in composition:
             idx = composition.index(STRUCTURE)
@@ -62,8 +71,17 @@ class VocabCrawler(scrapy.Spider):
                 del structure[idx]
 
             print("Structure", structure)
-        
+
+            for composee in structure:
+                repository.touch_char(composee)
+                repository.composed_with(char, composee)
+
         antonyms = self.get_antonyms()
+
+        for antonym in antonyms:
+            repository.touch_char(antonym)
+            repository.is_antonym(char, antonym)
+
         swords = self.get_swords()
 
         print("#1", antonyms, swords)
