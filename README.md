@@ -15,3 +15,4 @@ The Graph Model used is the following:
 And this was the result for the word: 爱不释手 (passion)
 
 ![alt tag](https://pbs.twimg.com/media/C8p2h01XkAIhGaE.jpg)
+
