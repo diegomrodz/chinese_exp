@@ -2,6 +2,8 @@
 
 Using Data to explore and learn the Chinese Language. It gather data from the internet and applied analytics to it using Neo4j and Python.
 
+This repository was mentioned on the Neo4j Community Blog, very gratefull for the mentioning and the chance to spread the word about this awesome technology! [Link here](http://tiny.cc/46lgky)
+
 ## Crawlers
 
 ### Vocab
