@@ -8,6 +8,8 @@ class HasRadical(Relationship): pass
 class ComposedWith(Relationship): pass
 class IsAntonym(Relationship): pass
 class Means(Relationship): pass
+class IsPronounced(Relationship): pass
+class Next(Relationship): pass
 
 def Character(char, **kwargs):
     return Node("Character", char=char, **kwargs)
@@ -17,6 +19,9 @@ def Definition(definition, **kwargs):
 
 def Word(word, **kwargs):
     return Node("Word", word=word, **kwargs)
+
+def Pinyin(pinyin, **kwargs):
+    return Node("Pinyin", pinyin=pinyin, **kwargs)
 
 def touch_char(char, **kwargs):
     node = Character(char, **kwargs)
@@ -29,6 +34,10 @@ def touch_definition(definition, **kwargs):
 def touch_word(word, **kwargs):
     node = Word(word.strip("*"), **kwargs)
     graph.merge(node, "Word", {"word": word})
+
+def touch_pinyin(pinyin, **kwargs):
+    node = Pinyin(pinyin, **kwargs)
+    graph.merge(node, "Pinyin", {"pinyin": pinyin})
 
 def has_radical(char, radical):
     rel = HasRadical(Character(char), Character(radical))
@@ -47,6 +56,24 @@ def is_antonym(antonym, antonymee):
     graph.merge(rel)
 
     rel = IsAntonym(Character(antonymee), Character(antonym))
+    graph.merge(rel)
+
+def is_pronounced(pronouncee, pinyin):
+    if len(pronouncee) > 1:
+        rel = IsPronounced(Word(pronouncee), Pinyin(pinyin))
+    else:
+        rel = IsPronounced(Character(pronouncee), Pinyin(pinyin))
+    
+    graph.merge(rel)
+
+def next_char(previous, actual):
+    rel = Next(Character(previous), Character(actual))
+
+    graph.merge(rel)
+
+def next_pinyin(previous, actual):
+    rel = Next(Pinyin(previous), Pinyin(actual))
+
     graph.merge(rel)
 
 def means(word, definition):
