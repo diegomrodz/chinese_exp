@@ -36,8 +36,10 @@ class VocabCrawler(scrapy.Spider):
     def process_word(self, word):
         print("[LOG] Processing Word:", word)
 
+        hsk_lvl = self.get_hsk_level()
+        repository.touch_word(word, hsk_level=hsk_lvl)
+
         pinyins = self.get_pinyin()
-        repository.touch_word(word)
 
         for pinyin in pinyins:
             repository.touch_pinyin(pinyin)
@@ -150,6 +152,9 @@ class VocabCrawler(scrapy.Spider):
                 definitions.split("; "))
         return None
     
+    def get_hsk_level(self):
+        return self.response.css(".hskbadge ::text").extract_first().split(" ")[1]
+
     def get_word(self):
         return self.response.css("h1 ::text").extract_first().split(" ")[-2]
 
