@@ -6,7 +6,7 @@ graph = Graph(password="cogch")
 
 class HasRadical(Relationship): pass
 class ComposedWith(Relationship): pass
-class IsAntonym(Relationship): pass
+class Antonymous(Relationship): pass
 class Means(Relationship): pass
 class IsPronounced(Relationship): pass
 class Next(Relationship): pass
@@ -52,10 +52,7 @@ def composed_with(composed, composee):
     graph.merge(rel)
 
 def is_antonym(antonym, antonymee):
-    rel = IsAntonym(Character(antonym), Character(antonymee))
-    graph.merge(rel)
-
-    rel = IsAntonym(Character(antonymee), Character(antonym))
+    rel = Antonymous(Character(antonym), Character(antonymee))
     graph.merge(rel)
 
 def is_pronounced(pronouncee, pinyin):
