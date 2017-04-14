@@ -36,12 +36,30 @@ class VocabCrawler(scrapy.Spider):
     def process_word(self, word):
         print("[LOG] Processing Word:", word)
 
-        pinyin = "".join(self.get_pinyin())
-        repository.touch_word(word, pinyin=pinyin)
+        pinyins = self.get_pinyin()
+        repository.touch_word(word)
+
+        for pinyin in pinyins:
+            repository.touch_pinyin(pinyin)
+            repository.is_pronounced(word, pinyin)
+
+            idx = pinyins.index(pinyin)
+
+            if idx >= 1:
+                p_pinyin = pinyins[idx - 1]
+
+                repository.next_pinyin(p_pinyin, pinyin)
 
         for char in word:
             repository.touch_char(char)
             repository.composed_with(word, char)
+
+            idx = word.index(char)
+
+            if idx >= 1:
+                p_char = word[idx - 1]
+
+                repository.next_char(p_char, char)
 
             if not char in visited:
                 yield scrapy.Request(PURPLE_URL.format(char), callback=self.parse)
@@ -67,10 +85,13 @@ class VocabCrawler(scrapy.Spider):
             idx = composition.index(TOTAL_STROKES)
             total_strokes = composition[idx + 1][1:-2]
 
-            repository.touch_char(char, pinyin=pinyin, strokes=total_strokes)
+            repository.touch_char(char, strokes=total_strokes)
         else:
-            repository.touch_char(char, pinyin=pinyin)
+            repository.touch_char(char)
         
+        repository.touch_pinyin(pinyin)
+        repository.is_pronounced(char, pinyin)
+
         if RADICAL in composition:
             idx = composition.index(RADICAL)
             radical = composition[idx + 2]
